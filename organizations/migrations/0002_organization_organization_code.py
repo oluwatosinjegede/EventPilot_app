@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='organization',
             name='organization_code',
-            field=models.CharField(blank=True, db_index=True, editable=False, max_length=10, null=True),
+            field=models.CharField(blank=True, editable=False, max_length=10, null=True),
         ),
         migrations.RunPython(populate_codes, migrations.RunPython.noop),
         migrations.AlterField(

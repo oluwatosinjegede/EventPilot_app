@@ -83,11 +83,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+DATABASE_URL = env(
+    "DATABASE_URL",
+    default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+)
+DATABASE_REQUIRES_SSL = (
+    DATABASE_URL.startswith(("postgres://", "postgresql://")) and not DEBUG
+)
+
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=not DEBUG,
+        ssl_require=DATABASE_REQUIRES_SSL,
     )
 }
 

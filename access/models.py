@@ -3,9 +3,14 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 from django.db import models
 
+
+def generate_access_code():
+    return secrets.token_urlsafe(18)
+
+
 class DigitalAccessCard(models.Model):
     guest = models.OneToOneField('guests.Guest', on_delete=models.CASCADE, related_name='access_card')
-    access_code = models.CharField(max_length=48, unique=True, default=lambda: secrets.token_urlsafe(18))
+    access_code = models.CharField(max_length=48, unique=True, default=generate_access_code)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True)
     active = models.BooleanField(default=True)
     confirmation_status = models.CharField(max_length=40, default='confirmed')

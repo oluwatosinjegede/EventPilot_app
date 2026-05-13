@@ -1,0 +1,16 @@
+<div class="my-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+  <nav class="flex min-w-max gap-2 text-sm font-bold" aria-label="Event sections">
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_detail' event.pk %}">Overview</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_tasks' event.pk %}">Tasks</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_budget' event.pk %}">Budget</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_vendors' event.pk %}">Vendors</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_guests' event.pk %}">Guests</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_guests' event.pk %}">Access</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_check_in' event.pk %}">Check-In</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_logistics' event.pk %}">Logistics</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_schedule' event.pk %}">Schedule</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_promotions' event.pk %}">Promotions</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_contingencies' event.pk %}">Contingencies</a>
+    <a class="rounded-xl px-3 py-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700" href="{% url 'event_reports' event.pk %}">Reports</a>
+  </nav>
+</div>

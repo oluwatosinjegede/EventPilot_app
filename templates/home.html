@@ -1,1 +1,25 @@
-{% extends 'base.html' %}{% block content %}<section class="rounded-3xl bg-white p-10 shadow"><h1 class="text-4xl font-bold">Run better events with EventPilot.</h1><p class="mt-4 text-lg text-slate-600">Plan timelines, send RSVP links, collect preferences, issue QR access cards, check guests in, coordinate vendors, and track readiness from one SaaS workspace.</p><a class="mt-6 inline-block rounded bg-indigo-600 px-5 py-3 text-white" href="{% url 'register' %}">Start planning</a></section>{% endblock %}
+{% extends 'base.html' %}
+{% block page_header %}<p class="text-sm font-bold uppercase tracking-wide text-indigo-600">EventPilot</p><h1 class="text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">Run polished events from one command center.</h1>{% endblock %}
+{% block page_actions %}{% if not user.is_authenticated %}<a class="btn btn-primary" href="{% url 'register' %}">Start planning</a><a class="btn btn-secondary" href="{% url 'login' %}">Sign in</a>{% else %}<a class="btn btn-primary" href="{% url 'dashboard' %}">Open dashboard</a>{% endif %}{% endblock %}
+{% block content %}
+<section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl shadow-slate-200/70">
+  <div class="grid gap-0 lg:grid-cols-2">
+    <div class="p-8 sm:p-12 lg:p-16">
+      <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700">Invite-to-check-in operations</span>
+      <h2 class="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">Every guest, task, vendor, and budget line beautifully organized.</h2>
+      <p class="mt-6 text-lg leading-8 text-slate-600">Plan timelines, collect RSVPs, issue QR access cards, coordinate vendors, track risks, and run event-day check-in from a clean SaaS workspace.</p>
+      <div class="mt-8 flex flex-wrap gap-3"><a class="btn btn-primary" href="{% url 'register' %}">Create your workspace</a><a class="btn btn-secondary" href="{% url 'event_list' %}">View events</a></div>
+    </div>
+    <div class="bg-gradient-to-br from-indigo-600 via-blue-600 to-emerald-500 p-8 sm:p-12">
+      <div class="rounded-3xl bg-white/95 p-6 shadow-2xl">
+        <p class="text-sm font-bold uppercase tracking-wide text-slate-500">Live readiness</p>
+        <div class="mt-5 space-y-5">
+          <div><div class="mb-2 flex justify-between text-sm font-bold"><span>Guest confirmations</span><span>78%</span></div><div class="h-3 rounded-full bg-slate-100"><div class="h-3 w-3/4 rounded-full bg-emerald-500"></div></div></div>
+          <div><div class="mb-2 flex justify-between text-sm font-bold"><span>Budget usage</span><span>62%</span></div><div class="h-3 rounded-full bg-slate-100"><div class="h-3 w-2/3 rounded-full bg-indigo-500"></div></div></div>
+          <div class="grid gap-3 sm:grid-cols-2"><div class="soft-card p-4"><p class="text-2xl font-black">248</p><p class="text-sm text-slate-500">Guests</p></div><div class="soft-card p-4"><p class="text-2xl font-black">14</p><p class="text-sm text-slate-500">Open tasks</p></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

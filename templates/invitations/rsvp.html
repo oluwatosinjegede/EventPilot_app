@@ -1,3 +1,33 @@
 {% extends 'base.html' %}
-{% block page_header %}<p class="text-sm font-bold uppercase tracking-wide text-indigo-600">RSVP</p><h1 class="text-3xl font-black text-slate-950">{{ guest.event.title }}</h1><p class="mt-1 text-slate-600">Hello {{ guest.full_name }} — please confirm your attendance.</p>{% endblock %}
-{% block content %}<div class="mx-auto grid max-w-5xl gap-6 lg:grid-cols-5"><section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl lg:col-span-2"><div class="bg-gradient-to-br from-indigo-600 to-blue-600 p-8 text-white"><p class="text-sm font-black uppercase tracking-wide text-indigo-100">You're invited</p><h2 class="mt-3 text-3xl font-black">{{ guest.event.title }}</h2></div><div class="space-y-4 p-6"><div class="soft-card p-4"><p class="text-xs font-bold uppercase text-slate-500">Date</p><p class="font-black">{{ guest.event.start_at }}</p></div><div class="soft-card p-4"><p class="text-xs font-bold uppercase text-slate-500">Venue</p><p class="font-black">{{ guest.event.venue_name|default:'Venue TBD' }}</p><p class="text-sm text-slate-500">{{ guest.event.venue_address }}</p></div></div></section><section class="card p-6 lg:col-span-3"><h2 class="text-2xl font-black">Your RSVP details</h2><p class="mt-2 text-slate-600">Choose your response and share preferences so the host can prepare a smooth experience.</p><form class="mt-6" method="post">{% include 'shared/form.html' %}</form></section></div>{% endblock %}
+{% block page_header %}<p class="text-sm font-bold uppercase tracking-wide text-indigo-600">RSVP</p><h1 class="text-3xl font-black text-slate-950">{{ event.title }}</h1><p class="mt-1 text-slate-600">Hello {{ guest.full_name }} — confirm your attendance, menu, and seat.</p>{% endblock %}
+{% block content %}
+<div class="mx-auto grid max-w-5xl gap-6 lg:grid-cols-5">
+  <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl lg:col-span-2">
+    <div class="bg-gradient-to-br from-indigo-600 to-blue-600 p-8 text-white">
+      <p class="text-sm font-black uppercase tracking-wide text-indigo-100">You're invited</p>
+      <h2 class="mt-3 text-3xl font-black">{{ event.title }}</h2>
+    </div>
+    <div class="space-y-4 p-6">
+      <div class="soft-card p-4"><p class="text-xs font-bold uppercase text-slate-500">Date</p><p class="font-black">{{ event.start_at }}</p></div>
+      <div class="soft-card p-4"><p class="text-xs font-bold uppercase text-slate-500">Venue</p><p class="font-black">{{ event.venue_name|default:'Venue TBD' }}</p><p class="text-sm text-slate-500">{{ event.venue_address }}</p></div>
+      <div class="soft-card p-4"><p class="text-xs font-bold uppercase text-slate-500">Your current summary</p><p class="text-sm">RSVP: <strong>{{ guest.get_rsvp_status_display }}</strong></p><p class="text-sm">Menu: <strong>{{ guest.selected_menu_choice|default:'Not selected' }}</strong></p><p class="text-sm">Seat: <strong>{{ guest.seat_assignment|default:'Not selected' }}</strong></p></div>
+    </div>
+  </section>
+  <section class="card p-6 lg:col-span-3">
+    <h2 class="text-2xl font-black">Complete your confirmation</h2>
+    <p class="mt-2 text-slate-600">Open invite link → confirm attendance → choose menu → select seat → submit confirmation.</p>
+    <form class="mt-6 space-y-5" method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="soft-card p-4"><h3 class="font-black">1. RSVP</h3>{{ form.rsvp_status.errors }}{{ form.rsvp_status }}</div>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div>{{ form.menu_choice.label_tag }}{{ form.menu_choice.errors }}{{ form.menu_choice }}</div>
+        <div>{{ form.seat_assignment.label_tag }}{{ form.seat_assignment.errors }}{{ form.seat_assignment }}<p class="mt-1 text-xs text-slate-500">If a seat was just taken, you will be prompted to select another.</p></div>
+      </div>
+      <div>{{ form.dietary_restrictions.label_tag }}{{ form.dietary_restrictions.errors }}{{ form.dietary_restrictions }}</div>
+      <div class="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-900"><strong>After confirmation:</strong> we generate your digital access card with QR code and send it by email and WhatsApp.</div>
+      <button class="btn btn-primary w-full" type="submit">Submit confirmation</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

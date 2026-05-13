@@ -144,7 +144,7 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
 DEFAULT_FROM_EMAIL = env(
     "DEFAULT_FROM_EMAIL",
-    default="EventPilot <no-reply@eventpilot.local>",
+    default="EventPilot <no-reply@eventepilot.rantcorner.com.ng>",
 )
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

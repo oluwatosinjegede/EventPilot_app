@@ -27,7 +27,7 @@ class BudgetItemForm(TailwindMixin, forms.ModelForm):
 class VendorForm(TailwindMixin, forms.ModelForm):
     class Meta: model=Vendor; exclude=['event']
 class GuestForm(TailwindMixin, forms.ModelForm):
-    class Meta: model=Guest; exclude=['event','checked_in','checked_in_at']
+     class Meta: model=Guest; exclude=['event','public_id','invitation_token','invite_status','email_invite_status','whatsapp_invite_status','rsvp_status','rsvp_submitted_at','selected_menu_choice','seat_assignment','invitation_sent_at','invitation_opened_at','rsvp_updated_at','pass_delivery_email_status','pass_delivery_whatsapp_status','checked_in','checked_in_at']
 class GuestUploadForm(TailwindMixin, forms.Form):
     file=forms.FileField(help_text='Upload .csv, .xlsx, or .xls with at least full_name plus optional email, phone, group_name, access_type, notes.')
 class BulkGuestForm(TailwindMixin, forms.Form):

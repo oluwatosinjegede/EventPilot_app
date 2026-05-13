@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -16,9 +16,10 @@ from checkins.models import CheckInLog
 from contingencies.models import ContingencyPlan
 from guests.models import Guest
 from invitations.models import GuestInvitation
+from invitations.services import send_guest_invitation, validate_qr_token
 from logistics.models import LogisticsPlan
 from notifications.models import NotificationLog, VendorNotificationRule
-from organizations.models import Organization
+from organizations.models import Membership, Organization
 from preferences.models import GuestPreference
 from promotions.models import PromotionTask
 from schedules.models import ScheduleItem
@@ -31,7 +32,23 @@ from .models import Event
 
 def home(request): return render(request, 'home.html')
 
-def user_events(user): return Event.objects.filter(organization__memberships__user=user).exclude(organization__memberships__user=user, organization__memberships__role='vendor').distinct()
+def planner_organization_ids(user):
+    if not user.is_authenticated:
+        return Membership.objects.none().values('organization_id')
+    return Membership.objects.filter(user=user).exclude(role=Membership.VENDOR).values('organization_id')
+
+
+def user_events(user):
+    return (
+        Event.objects.filter(organization_id__in=planner_organization_ids(user))
+        .select_related('organization')
+        .annotate(guest_total=Count('guests', distinct=True))
+        .distinct()
+    )
+
+
+def user_organizations(user):
+    return Organization.objects.filter(pk__in=planner_organization_ids(user)).distinct()
 
 def get_event_for_user(user, pk): return get_object_or_404(user_events(user), pk=pk)
 
@@ -42,17 +59,18 @@ def event_metrics(event):
 
 @login_required
 def dashboard(request):
-    if VendorProfile.objects.filter(user=request.user, approved=True).exists() and not user_events(request.user).exists():
+    events = user_events(request.user)
+    if VendorProfile.objects.filter(user=request.user, approved=True).exists() and not events.exists():
         return redirect('vendor_dashboard')
-    events=user_events(request.user)[:6]
+    events=user_events(request.user).annotate(guest_total=Count('guests'))[:6]
     return render(request,'events/dashboard.html', {'events':events})
 
 @login_required
-def event_list(request): return render(request,'events/list.html', {'events':user_events(request.user)})
+def event_list(request): return render(request,'events/list.html', {'events':user_events(request.user).annotate(guest_total=Count('guests'))})
 
 @login_required
 def event_create(request):
-    orgs=Organization.objects.filter(memberships__user=request.user).exclude(memberships__user=request.user, memberships__role='vendor')
+    orgs=user_organizations(request.user)
     if not orgs.exists(): messages.warning(request,'Create an organization before adding events.'); return redirect('organizations')
     form=EventForm(request.POST or None)
     if request.method=='POST' and form.is_valid():
@@ -152,10 +170,7 @@ def guest_import_preview(request, pk):
     return render(request,'guests/import_preview.html', {'event':event,'rows':rows,'errors':errors})
 
 def send_invitation(request, guest):
-    inv,_=GuestInvitation.objects.get_or_create(guest=guest)
-    url=request.build_absolute_uri(reverse('invite_rsvp', args=[inv.token]))
-    send_mail(f'Invitation to {guest.event.title}', f'Hello {guest.full_name}, RSVP here: {url}', None, [guest.email] if guest.email else [])
-    inv.sent_at=timezone.now(); inv.resend_count+=1; inv.save(); guest.invite_status='sent'; guest.save(update_fields=['invite_status'])
+    return send_guest_invitation(guest, request)
 
 @login_required
 def send_invites(request, pk):
@@ -177,16 +192,10 @@ def check_in(request, pk):
         if attempts > 120:
             return HttpResponse('Too many check-in attempts. Please wait and try again.', status=429)
         cache.set(key, attempts + 1, 60)
-        code=request.POST.get('access_code','').strip(); card=DigitalAccessCard.objects.filter(access_code=code).select_related('guest__event').first()
-        if not card: status,msg,guest='invalid_code','Invalid code',None
-        elif card.guest.event_id != event.id: status,msg,guest='wrong_event','Wrong event',card.guest
-        elif not card.active: status,msg,guest='access_revoked','Access revoked',card.guest
-        elif card.guest.rsvp_status != 'attending': status,msg,guest='guest_not_confirmed','Guest not confirmed',card.guest
-        elif card.guest.checked_in: status,msg,guest='already_checked_in','Already checked in',card.guest
-        else:
-            guest=card.guest; guest.checked_in=True; guest.checked_in_at=timezone.now(); guest.invite_status='checked_in'; guest.save(update_fields=['checked_in','checked_in_at','invite_status']); status,msg='valid','Valid — checked in successfully'; notify_vendors(event, guest, 'arrived')
-        CheckInLog.objects.create(event=event, guest=guest, access_card=card, scanned_by=request.user, code_entered=code, result=status, message=msg)
-        result={'status':status,'message':msg,'guest':guest}
+        code=request.POST.get('access_code','').strip()
+        result=validate_qr_token(code, event, request.user)
+        if result['status'] == 'valid' and result['guest']:
+            notify_vendors(event, result['guest'], 'arrived')
     return render(request,'checkins/scanner.html', {'event':event,'result':result,'logs':event.checkin_logs.all()[:20]})
 
 def notify_vendors(event, guest, trigger):

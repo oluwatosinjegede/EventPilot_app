@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<h1 class="text-3xl font-bold">{{ org.name }}</h1><p class="text-slate-600">Organization settings and members.</p><div class="bg-white p-5 rounded shadow mt-6"><h2 class="font-semibold">Members</h2>{% for m in org.memberships.all %}<p>{{ m.user.username }} — {{ m.get_role_display }}</p>{% endfor %}</div>{% endblock %}

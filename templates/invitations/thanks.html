@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<div class="bg-white p-6 rounded shadow"><h1 class="text-2xl font-bold">Thank you, {{ guest.full_name }}.</h1><p>Your RSVP has been recorded as {{ guest.get_rsvp_status_display }}.</p></div>{% endblock %}

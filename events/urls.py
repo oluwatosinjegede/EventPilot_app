@@ -1,0 +1,6 @@
+from django.urls import path
+from . import views
+urlpatterns=[
+ path('', views.event_list, name='event_list'), path('create/', views.event_create, name='event_create'), path('<int:pk>/', views.event_detail, name='event_detail'), path('<int:pk>/edit/', views.event_edit, name='event_edit'),
+ path('<int:pk>/tasks/', views.task_page, name='event_tasks'), path('<int:pk>/budget/', views.budget_page, name='event_budget'), path('<int:pk>/vendors/', views.vendor_page, name='event_vendors'), path('<int:pk>/guests/', views.guest_page, name='event_guests'), path('<int:pk>/guests/add/', views.guest_page, name='event_guest_add'), path('<int:pk>/guests/upload/', views.guest_upload, name='event_guest_upload'), path('<int:pk>/guests/import-preview/', views.guest_import_preview, name='guest_import_preview'), path('<int:pk>/guests/send-invites/', views.send_invites, name='send_invites'),
+ path('<int:pk>/check-in/', views.check_in, name='event_check_in'), path('<int:pk>/logistics/', views.logistics_page, name='event_logistics'), path('<int:pk>/schedule/', views.schedule_page, name='event_schedule'), path('<int:pk>/promotions/', views.promotions_page, name='event_promotions'), path('<int:pk>/contingencies/', views.contingencies_page, name='event_contingencies'), path('<int:pk>/reports/', views.reports_page, name='event_reports')]

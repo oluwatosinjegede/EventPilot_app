@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block page_header %}<p class="text-sm font-bold uppercase tracking-wide text-indigo-600">EventPilot</p><h1 class="text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">Run polished events from one command center.</h1>{% endblock %}
-{% block page_actions %}{% if not user.is_authenticated %}<a class="btn btn-primary" href="{% url 'register' %}">Start planning</a><a class="btn btn-secondary" href="{% url 'login' %}">Sign in</a>{% else %}<a class="btn btn-primary" href="{% url 'dashboard' %}">Open dashboard</a>{% endif %}{% endblock %}
+{% block page_actions %}{% if not user.is_authenticated %}<a class="btn btn-primary" href="{% url 'register' %}">Event planner registration</a><a class="btn btn-secondary" href="{% url 'vendor_register' %}">Vendor registration</a><a class="btn btn-secondary" href="{% url 'login' %}">Sign in</a>{% else %}<a class="btn btn-primary" href="{% url 'dashboard' %}">Open dashboard</a>{% endif %}{% endblock %}
 {% block content %}
 <section class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl shadow-slate-200/70">
   <div class="grid gap-0 lg:grid-cols-2">
@@ -8,7 +8,7 @@
       <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700">Invite-to-check-in operations</span>
       <h2 class="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">Every guest, task, vendor, and budget line beautifully organized.</h2>
       <p class="mt-6 text-lg leading-8 text-slate-600">Plan timelines, collect RSVPs, issue QR access cards, coordinate vendors, track risks, and run event-day check-in from a clean SaaS workspace.</p>
-      <div class="mt-8 flex flex-wrap gap-3"><a class="btn btn-primary" href="{% url 'register' %}">Create your workspace</a><a class="btn btn-secondary" href="{% url 'event_list' %}">View events</a></div>
+      <div class="mt-8 flex flex-wrap gap-3"><a class="btn btn-primary" href="{% url 'register' %}">Create your workspace</a><a class="btn btn-secondary" href="{% url 'vendor_register' %}">Join event</a></div>
     </div>
     <div class="bg-gradient-to-br from-indigo-600 via-blue-600 to-emerald-500 p-8 sm:p-12">
       <div class="rounded-3xl bg-white/95 p-6 shadow-2xl">

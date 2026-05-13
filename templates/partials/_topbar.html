@@ -15,7 +15,8 @@
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-secondary">Logout</button></form>
       {% else %}
         <a class="btn btn-secondary" href="{% url 'login' %}">Login</a>
-        <a class="btn btn-primary" href="{% url 'register' %}">Register</a>
+        <a class="btn btn-primary" href="{% url 'register' %}">Event planner registration</a>
+        <a class="btn btn-secondary" href="{% url 'vendor_register' %}">Vendor registration</a>
       {% endif %}
     </nav>
   </div>

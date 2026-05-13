@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block page_header %}<p class="text-sm font-bold uppercase tracking-wide text-indigo-600">Vendor dashboard</p><h1 class="text-3xl font-black text-slate-950">Your linked events</h1><p class="mt-1 text-slate-600">Only events connected to your vendor account are shown here.</p>{% endblock %}
+{% block page_actions %}<a class="btn btn-secondary" href="{% url 'vendor_profile' %}">Edit vendor profile</a>{% endblock %}
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-3">
+  <section class="lg:col-span-2 space-y-4">
+    {% for profile in profiles %}
+      <article class="card p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div><p class="text-sm font-bold uppercase tracking-wide text-indigo-600">{{ profile.company_name }}</p><h2 class="text-2xl font-black text-slate-950">{{ profile.event.title }}</h2><p class="text-slate-600">{{ profile.organization.name }}</p></div>
+          {% include 'partials/_badge.html' with label=profile.vendor.get_status_display status=profile.vendor.status %}
+        </div>
+        <dl class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div class="soft-card p-4"><dt class="text-xs font-bold uppercase text-slate-500">Date / time</dt><dd class="mt-1 font-semibold">{{ profile.event.start_at }} – {{ profile.event.end_at }}</dd></div>
+          <div class="soft-card p-4"><dt class="text-xs font-bold uppercase text-slate-500">Venue</dt><dd class="mt-1 font-semibold">{{ profile.event.venue_name|default:'Venue TBD' }}</dd><dd class="text-sm text-slate-500">{{ profile.event.venue_address }}</dd></div>
+          <div class="soft-card p-4"><dt class="text-xs font-bold uppercase text-slate-500">Service type</dt><dd class="mt-1 font-semibold">{{ profile.service_type }}</dd></div>
+          <div class="soft-card p-4"><dt class="text-xs font-bold uppercase text-slate-500">Organizer notes</dt><dd class="mt-1 text-sm text-slate-700">{{ profile.vendor.notes|default:'No notes shared yet.' }}</dd></div>
+        </dl>
+      </article>
+    {% endfor %}
+  </section>
+  <aside class="space-y-6">
+    <section class="card p-6"><h2 class="text-lg font-black">Guest notifications</h2><div class="mt-4 space-y-3">{% for note in notifications %}<div class="soft-card p-3"><p class="text-sm font-bold">{{ note.subject }}</p><p class="mt-1 whitespace-pre-line text-sm text-slate-600">{{ note.body }}</p><p class="mt-2 text-xs text-slate-400">{{ note.created_at }}</p></div>{% empty %}<p class="text-sm text-slate-500">No guest confirmation or arrival notifications yet.</p>{% endfor %}</div></section>
+    <section class="card p-6"><h2 class="text-lg font-black">Assigned tasks</h2><div class="mt-4 space-y-3">{% for task in tasks %}<div class="soft-card p-3"><p class="text-sm font-bold">{{ task.title }}</p><p class="text-xs text-slate-500">{{ task.event.title }} · {{ task.get_status_display }}{% if task.due_date %} · due {{ task.due_date }}{% endif %}</p></div>{% empty %}<p class="text-sm text-slate-500">No tasks assigned to you.</p>{% endfor %}</div></section>
+  </aside>
+</div>
+{% endblock %}

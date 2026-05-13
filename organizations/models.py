@@ -1,11 +1,18 @@
 from django.conf import settings
 from django.db import models
+from event_codes import generate_unique_code
 
 class Organization(models.Model):
     name = models.CharField(max_length=160)
     slug = models.SlugField(unique=True)
+    organization_code = models.CharField(max_length=10, unique=True, db_index=True, editable=False, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_organizations')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.organization_code:
+            self.organization_code = generate_unique_code(Organization, 'organization_code', 'ORG')
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

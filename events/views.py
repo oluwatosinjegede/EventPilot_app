@@ -24,13 +24,14 @@ from promotions.models import PromotionTask
 from schedules.models import ScheduleItem
 from timelines.models import EventTask
 from vendors.models import Vendor
+from vendors.models import VendorProfile
 from .forms import *
 from .models import Event
 
 
 def home(request): return render(request, 'home.html')
 
-def user_events(user): return Event.objects.filter(organization__memberships__user=user).distinct()
+def user_events(user): return Event.objects.filter(organization__memberships__user=user).exclude(organization__memberships__user=user, organization__memberships__role='vendor').distinct()
 
 def get_event_for_user(user, pk): return get_object_or_404(user_events(user), pk=pk)
 
@@ -41,6 +42,8 @@ def event_metrics(event):
 
 @login_required
 def dashboard(request):
+    if VendorProfile.objects.filter(user=request.user, approved=True).exists() and not user_events(request.user).exists():
+        return redirect('vendor_dashboard')
     events=user_events(request.user)[:6]
     return render(request,'events/dashboard.html', {'events':events})
 
@@ -49,7 +52,7 @@ def event_list(request): return render(request,'events/list.html', {'events':use
 
 @login_required
 def event_create(request):
-    orgs=Organization.objects.filter(memberships__user=request.user)
+    orgs=Organization.objects.filter(memberships__user=request.user).exclude(memberships__user=request.user, memberships__role='vendor')
     if not orgs.exists(): messages.warning(request,'Create an organization before adding events.'); return redirect('organizations')
     form=EventForm(request.POST or None)
     if request.method=='POST' and form.is_valid():
@@ -84,7 +87,30 @@ def vendor_page(request, pk):
     event=get_event_for_user(request.user, pk); vform=VendorForm(request.POST or None, prefix='vendor'); rform=VendorNotificationRuleForm(request.POST or None, prefix='rule')
     if request.method=='POST' and 'save_vendor' in request.POST and vform.is_valid(): obj=vform.save(commit=False); obj.event=event; obj.save(); return redirect('event_vendors', pk)
     if request.method=='POST' and 'save_rule' in request.POST and rform.is_valid(): obj=rform.save(commit=False); obj.event=event; obj.save(); return redirect('event_vendors', pk)
-    return render(request,'events/vendors.html', {'event':event,'form':vform,'rule_form':rform,'items':event.vendors.all(),'rules':event.notification_rules.all(),'title':'Vendors'})
+    return render(request,'events/vendors.html', {'event':event,'form':vform,'rule_form':rform,'items':event.vendors.select_related('user'),'rules':event.notification_rules.all(),'title':'Vendors'})
+
+@login_required
+def vendor_codes(request, pk):
+    event=get_event_for_user(request.user, pk)
+    registration_url=request.build_absolute_uri(reverse('vendor_register'))
+    return render(request,'vendors/vendor_codes.html', {'event':event,'registration_url':registration_url})
+
+@login_required
+def vendor_approve(request, pk, vendor_id):
+    event=get_event_for_user(request.user, pk)
+    vendor=get_object_or_404(event.vendors, pk=vendor_id)
+    VendorProfile.objects.filter(vendor=vendor, event=event).update(approved=True)
+    vendor.status='confirmed'; vendor.save(update_fields=['status'])
+    messages.success(request, f'{vendor.vendor_name} approved.')
+    return redirect('event_vendors', pk)
+
+@login_required
+def vendor_reject(request, pk, vendor_id):
+    event=get_event_for_user(request.user, pk)
+    vendor=get_object_or_404(event.vendors, pk=vendor_id)
+    VendorProfile.objects.filter(vendor=vendor, event=event).update(approved=False)
+    messages.warning(request, f'{vendor.vendor_name} rejected.')
+    return redirect('event_vendors', pk)
 
 @login_required
 def guest_page(request, pk):
@@ -174,8 +200,8 @@ def notify_vendors(event, guest, trigger):
         body='\n'.join(parts)
         sent=False
         if rule.vendor.email: send_mail(f'EventPilot update: {guest.full_name}', body, None, [rule.vendor.email]); sent=True
-        NotificationLog.objects.create(event=event, vendor=rule.vendor, guest=guest, rule=rule, subject=f'{guest.full_name} {trigger}', body=body, sent=sent)
-
+        NotificationLog.objects.create(event=event, vendor=rule.vendor, guest=guest, rule=rule, channel='email' if sent else 'dashboard', subject=f'{guest.full_name} {trigger}', body=body, sent=sent)
+        
 def simple_module(request, pk, model, formcls, related, title, template='events/module.html'):
     event=get_event_for_user(request.user, pk); instance=None
     if model is LogisticsPlan: instance,_=LogisticsPlan.objects.get_or_create(event=event)

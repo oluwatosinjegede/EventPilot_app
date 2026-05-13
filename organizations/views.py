@@ -6,7 +6,10 @@ from .models import Membership, Organization
 
 @login_required
 def organization_list(request):
-    orgs = Organization.objects.filter(memberships__user=request.user).distinct()
+    if Membership.objects.filter(user=request.user, role=Membership.VENDOR).exists() and not Membership.objects.exclude(role=Membership.VENDOR).filter(user=request.user).exists():
+        messages.error(request, 'Vendor accounts cannot manage organization settings.')
+        return redirect('vendor_dashboard')
+    orgs = Organization.objects.filter(memberships__user=request.user).exclude(memberships__user=request.user, memberships__role=Membership.VENDOR).distinct()
     form = OrganizationForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         org = form.save(commit=False); org.created_by=request.user; org.save()
@@ -17,5 +20,5 @@ def organization_list(request):
 
 @login_required
 def organization_detail(request, pk):
-    org = get_object_or_404(Organization, pk=pk, memberships__user=request.user)
+    org = get_object_or_404(Organization.objects.exclude(memberships__user=request.user, memberships__role=Membership.VENDOR), pk=pk, memberships__user=request.user)
     return render(request, 'organizations/detail.html', {'org':org})

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block page_header %}<p class="text-sm font-bold uppercase tracking-wide text-indigo-600">Vendor invitation codes</p><h1 class="text-3xl font-black text-slate-950">{{ event.title }}</h1><p class="mt-1 text-slate-600">Share these codes only with vendors you want to connect to this event.</p>{% endblock %}
+{% block content %}
+<section class="card p-6">
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="soft-card p-4"><p class="text-xs font-bold uppercase text-slate-500">Organization code</p><code id="org-code" class="mt-2 block text-xl font-black">{{ event.organization.organization_code }}</code><button class="btn btn-secondary mt-3" data-copy="org-code">Copy</button></div>
+    <div class="soft-card p-4"><p class="text-xs font-bold uppercase text-slate-500">Event code</p><code id="event-code" class="mt-2 block text-xl font-black">{{ event.event_code }}</code><button class="btn btn-secondary mt-3" data-copy="event-code">Copy</button></div>
+    <div class="soft-card p-4"><p class="text-xs font-bold uppercase text-slate-500">Registration link</p><code id="registration-link" class="mt-2 block break-all text-sm font-bold">{{ registration_url }}</code><button class="btn btn-secondary mt-3" data-copy="registration-link">Copy</button></div>
+  </div>
+  <div class="mt-6 rounded-2xl bg-indigo-50 p-5 text-indigo-950"><p class="font-black">Vendor Instructions</p><p class="mt-1">Create a vendor account using this Organization Code and Event Code.</p></div>
+</section>
+<script>
+  document.querySelectorAll('[data-copy]').forEach((button) => button.addEventListener('click', () => {
+    const text = document.getElementById(button.dataset.copy).innerText.trim();
+    navigator.clipboard.writeText(text);
+    button.innerText = 'Copied';
+    setTimeout(() => button.innerText = 'Copy', 1200);
+  }));
+</script>
+{% endblock %}

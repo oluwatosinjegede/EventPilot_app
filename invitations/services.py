@@ -30,17 +30,23 @@ def send_whatsapp_message(phone_number, body):
 
 def _send_mail(subject, body, recipient):
     try:
-        return send_mail(subject, body, None, [recipient]) > 0
-    except Exception:
-        logger.exception('Failed to send invitation email to guest recipient.')
+        return send_mail(subject, body, None, [recipient], fail_silently=True) > 0
+    except Exception as exc:
+        logger.warning(
+            'Failed to send invitation email to guest recipient: %s',
+            exc,
+        )
         return False
 
 
 def _send_email_message(message):
     try:
-        return message.send() > 0
-    except Exception:
-        logger.exception('Failed to send access card email to guest recipient.')
+        return message.send(fail_silently=True) > 0
+    except Exception as exc:
+        logger.warning(
+            'Failed to send access card email to guest recipient: %s',
+            exc,
+        )
         return False
 
 def send_guest_invitation(guest, request=None):

@@ -43,8 +43,9 @@ class InvitationFlowTests(TestCase):
         self.assertIn(self.guest.invitation_token, mail.outbox[0].body)
 
     @override_settings(EMAIL_BACKEND='invitations.tests.TimeoutEmailBackend')
-    def test_invitation_email_timeout_marks_email_failed(self):
-        invitation = send_guest_invitation(self.guest)
+    def test_invitation_email_timeout_marks_email_failed_without_error_log(self):
+        with self.assertNoLogs('invitations.services', level='ERROR'):
+            invitation = send_guest_invitation(self.guest)
         self.guest.refresh_from_db()
         invitation.refresh_from_db()
         self.assertEqual(self.guest.email_invite_status, 'failed')

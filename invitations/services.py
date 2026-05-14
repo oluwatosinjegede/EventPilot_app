@@ -1,4 +1,8 @@
 import logging
+import signal
+from contextlib import contextmanager
+
+from django.conf import settings
 
 from django.core.mail import EmailMessage, send_mail
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
@@ -13,6 +17,35 @@ from .models import GuestInvitation
 VALID_RSVP_STATUSES = {'attending', 'declining', 'maybe'}
 QR_MAX_AGE_SECONDS = 60 * 60 * 24 * 370
 logger = logging.getLogger(__name__)
+
+@contextmanager
+def email_send_timeout():
+    """Raise TimeoutError if a mail backend blocks longer than configured."""
+    timeout = getattr(settings, 'INVITATION_EMAIL_SEND_TIMEOUT', None)
+    if timeout is None:
+        timeout = getattr(settings, 'EMAIL_TIMEOUT', 5)
+    try:
+        timeout = float(timeout)
+    except (TypeError, ValueError):
+        timeout = 5.0
+    if timeout <= 0 or not hasattr(signal, 'SIGALRM'):
+        yield
+        return
+
+    def _handle_timeout(signum, frame):
+        raise TimeoutError('Invitation email send timed out')
+
+    previous_handler = signal.getsignal(signal.SIGALRM)
+    previous_timer = signal.getitimer(signal.ITIMER_REAL)
+    signal.signal(signal.SIGALRM, _handle_timeout)
+    signal.setitimer(signal.ITIMER_REAL, timeout)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+        if previous_timer[0] > 0:
+            signal.setitimer(signal.ITIMER_REAL, *previous_timer)
 
 
 class InvitationFlowError(ValueError):
@@ -30,7 +63,8 @@ def send_whatsapp_message(phone_number, body):
 
 def _send_mail(subject, body, recipient):
     try:
-        return send_mail(subject, body, None, [recipient], fail_silently=True) > 0
+        with email_send_timeout():
+            return send_mail(subject, body, None, [recipient], fail_silently=True) > 0
     except Exception as exc:
         logger.warning(
             'Failed to send invitation email to guest recipient: %s',
@@ -41,7 +75,8 @@ def _send_mail(subject, body, recipient):
 
 def _send_email_message(message):
     try:
-        return message.send(fail_silently=True) > 0
+        with email_send_timeout():
+            return message.send(fail_silently=True) > 0
     except Exception as exc:
         logger.warning(
             'Failed to send access card email to guest recipient: %s',

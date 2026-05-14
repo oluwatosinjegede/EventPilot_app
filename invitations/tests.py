@@ -1,4 +1,5 @@
 import json
+import time
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.mail.backends.base import BaseEmailBackend
@@ -15,6 +16,11 @@ from organizations.models import Organization
 class TimeoutEmailBackend(BaseEmailBackend):
     def send_messages(self, email_messages):
         raise TimeoutError('SMTP server did not respond')
+
+class SlowEmailBackend(BaseEmailBackend):
+    def send_messages(self, email_messages):
+        time.sleep(2)
+        return len(email_messages)
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -52,6 +58,20 @@ class InvitationFlowTests(TestCase):
         self.assertEqual(self.guest.whatsapp_invite_status, 'sent')
         self.assertIsNone(invitation.email_sent_at)
 
+    @override_settings(
+        EMAIL_BACKEND='invitations.tests.SlowEmailBackend',
+        INVITATION_EMAIL_SEND_TIMEOUT=0.1,
+    )
+    def test_invitation_email_timeout_interrupts_blocking_backend(self):
+        started_at = time.monotonic()
+        invitation = send_guest_invitation(self.guest)
+        elapsed = time.monotonic() - started_at
+
+        self.guest.refresh_from_db()
+        invitation.refresh_from_db()
+        self.assertLess(elapsed, 1)
+        self.assertEqual(self.guest.email_invite_status, 'failed')
+        self.assertIsNone(invitation.email_sent_at)
 
     def test_invite_details_invalid_token_returns_404(self):
         response = self.client.get(reverse('api_invite_details', args=['not-a-token']))

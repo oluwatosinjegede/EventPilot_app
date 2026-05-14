@@ -1,3 +1,5 @@
+import logging
+
 from django.core.mail import EmailMessage, send_mail
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.db import IntegrityError, transaction
@@ -10,6 +12,7 @@ from .models import GuestInvitation
 
 VALID_RSVP_STATUSES = {'attending', 'declining', 'maybe'}
 QR_MAX_AGE_SECONDS = 60 * 60 * 24 * 370
+logger = logging.getLogger(__name__)
 
 
 class InvitationFlowError(ValueError):
@@ -25,6 +28,20 @@ def send_whatsapp_message(phone_number, body):
     """Placeholder integration point for a WhatsApp provider."""
     return bool(phone_number and body)
 
+def _send_mail(subject, body, recipient):
+    try:
+        return send_mail(subject, body, None, [recipient]) > 0
+    except Exception:
+        logger.exception('Failed to send invitation email to guest recipient.')
+        return False
+
+
+def _send_email_message(message):
+    try:
+        return message.send() > 0
+    except Exception:
+        logger.exception('Failed to send access card email to guest recipient.')
+        return False
 
 def send_guest_invitation(guest, request=None):
     invitation, _ = GuestInvitation.objects.get_or_create(guest=guest)
@@ -35,8 +52,7 @@ def send_guest_invitation(guest, request=None):
     subject = f'Invitation to {guest.event.title}'
     body = f'Hello {guest.full_name}, RSVP here: {url}'
 
-    if guest.email:
-        send_mail(subject, body, None, [guest.email])
+    if guest.email and _send_mail(subject, body, guest.email):
         guest.email_invite_status = 'sent'
         invitation.email_sent_at = now
     else:
@@ -137,8 +153,10 @@ def deliver_access_card(guest, card, request=None):
                 msg.attach_file(path)
             except FileNotFoundError:
                 pass
-        msg.send()
-        guest.pass_delivery_email_status = 'sent'
+        if _send_email_message(msg):
+            guest.pass_delivery_email_status = 'sent'
+        else:
+            guest.pass_delivery_email_status = 'failed'
     else:
         guest.pass_delivery_email_status = 'failed'
 
